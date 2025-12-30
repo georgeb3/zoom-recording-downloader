@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.png" alt="Zoom Recording Downloader Logo" width="300">
+  <img src="zoom-recording-downloader-logo.png" alt="Zoom Recording Downloader Logo" width="300">
 </div>
 
 # Zoom Recording Downloader
