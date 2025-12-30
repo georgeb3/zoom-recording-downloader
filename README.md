@@ -55,7 +55,7 @@ The script uses environment variables for configuration. Set the following:
 - `ZOOM_USER_ID`: User ID to download recordings for (default: `"me"` - uses account owner)
   - Can be `"me"`, a Zoom user ID, or an email address
 - `ZOOM_OUT_DIR`: Output directory for downloaded recordings (default: `./zoom_recordings`)
-- `ZOOM_MONTHS_BACK`: Number of months to look back for recordings (default: `24`)
+- `ZOOM_MONTHS_BACK`: Number of months to look back for recordings (default: `4`)
 
 ## Usage
 

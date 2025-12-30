@@ -221,8 +221,8 @@ def main():
     # Local output folder (optional, defaults to ./zoom_recordings)
     out_dir = pathlib.Path(os.environ.get("ZOOM_OUT_DIR", "./zoom_recordings")).expanduser().resolve()
 
-    # How far back to pull (months)
-    months_back = int(os.environ.get("ZOOM_MONTHS_BACK", "24"))
+    # How far back to pull (months, optional, defaults to 4)
+    months_back = int(os.environ.get("ZOOM_MONTHS_BACK", "4"))
 
     print("Getting access token...")
     access_token = get_s2s_access_token(account_id, client_id, client_secret)
