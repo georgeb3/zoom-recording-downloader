@@ -219,7 +219,7 @@ def main():
     user_id = os.environ.get("ZOOM_USER_ID", "me")
 
     # Local output folder
-    out_dir = pathlib.Path(os.environ.get("ZOOM_OUT_DIR", "/Users/gb/Library/CloudStorage/GoogleDrive-george@bl3ndlabs.com/Shared drives/VIDEO RECORDING/Zoom Archives")).expanduser().resolve()
+    out_dir = pathlib.Path(os.environ.get("ZOOM_OUT_DIR", "./zoom_recordings")).expanduser().resolve()
 
     # How far back to pull (months)
     months_back = int(os.environ.get("ZOOM_MONTHS_BACK", "24"))
