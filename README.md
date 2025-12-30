@@ -1,4 +1,4 @@
-# Zoom Download Recordings (zdr)
+# Zoom Recording Downloader
 
 A Python script to automatically download Zoom cloud recordings using the Zoom API. The script supports long-running downloads with automatic token refresh, tracks downloaded files via a manifest system, and organizes recordings by date and meeting topic.
 
@@ -67,7 +67,7 @@ Set the required environment variables and run the script:
 export ZOOM_ACCOUNT_ID="your_account_id"
 export ZOOM_CLIENT_ID="your_client_id"
 export ZOOM_CLIENT_SECRET="your_client_secret"
-python3 zdr.py
+python3 zoom_recording_downloader.py
 ```
 
 ### Inline Environment Variables
@@ -81,7 +81,7 @@ ZOOM_CLIENT_SECRET="your_client_secret" \
 ZOOM_USER_ID="me" \
 ZOOM_OUT_DIR="./recordings" \
 ZOOM_MONTHS_BACK="12" \
-python3 zdr.py
+python3 zoom_recording_downloader.py
 ```
 
 ### Using a Specific User
@@ -89,7 +89,7 @@ python3 zdr.py
 To download recordings for a specific user:
 
 ```bash
-ZOOM_USER_ID="user@example.com" python3 zdr.py
+ZOOM_USER_ID="user@example.com" python3 zoom_recording_downloader.py
 ```
 
 ## Output Structure
