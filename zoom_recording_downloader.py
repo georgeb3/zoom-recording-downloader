@@ -46,7 +46,13 @@ def get_s2s_access_token(account_id: str, client_id: str, client_secret: str) ->
     )
     if resp.status_code != 200:
         raise SystemExit(f"Token error {resp.status_code}: {resp.text}")
-    return resp.json()["access_token"]
+    
+    token_data = resp.json()
+    # Debug: Check what scopes were actually granted
+    if "scope" in token_data:
+        print(f"Token granted scopes: {token_data['scope']}")
+    
+    return token_data["access_token"]
 
 def zoom_get(path: str, token_container: dict, params: dict | None = None, refresh_token_callback: Callable[[], str] | None = None) -> dict:
     """
