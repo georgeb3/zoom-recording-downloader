@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="logo.png" alt="Zoom Recording Downloader Logo" width="300">
+</div>
+
 # Zoom Recording Downloader
 
 A Python script to automatically download Zoom cloud recordings using the Zoom API. The script supports long-running downloads with automatic token refresh, tracks downloaded files via a manifest system, and organizes recordings by date and meeting topic.
