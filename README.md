@@ -49,12 +49,12 @@ The script uses environment variables for configuration. Set the following:
 - `ZOOM_ACCOUNT_ID`: Your Zoom account ID
 - `ZOOM_CLIENT_ID`: Your OAuth app Client ID
 - `ZOOM_CLIENT_SECRET`: Your OAuth app Client Secret
-- `ZOOM_OUT_DIR`: Output directory for downloaded recordings
 
 ### Optional Environment Variables
 
 - `ZOOM_USER_ID`: User ID to download recordings for (default: `"me"` - uses account owner)
   - Can be `"me"`, a Zoom user ID, or an email address
+- `ZOOM_OUT_DIR`: Output directory for downloaded recordings (default: `./zoom_recordings`)
 - `ZOOM_MONTHS_BACK`: Number of months to look back for recordings (default: `24`)
 
 ## Usage
@@ -67,7 +67,6 @@ Set the required environment variables and run the script:
 export ZOOM_ACCOUNT_ID="your_account_id"
 export ZOOM_CLIENT_ID="your_client_id"
 export ZOOM_CLIENT_SECRET="your_client_secret"
-export ZOOM_OUT_DIR="./zoom_recordings"
 python3 zoom_recording_downloader.py
 ```
 
@@ -79,8 +78,8 @@ You can also set environment variables inline:
 ZOOM_ACCOUNT_ID="your_account_id" \
 ZOOM_CLIENT_ID="your_client_id" \
 ZOOM_CLIENT_SECRET="your_client_secret" \
-ZOOM_OUT_DIR="./recordings" \
 ZOOM_USER_ID="me" \
+ZOOM_OUT_DIR="./recordings" \
 ZOOM_MONTHS_BACK="12" \
 python3 zoom_recording_downloader.py
 ```
@@ -93,7 +92,6 @@ To download recordings for a specific user:
 ZOOM_ACCOUNT_ID="your_account_id" \
 ZOOM_CLIENT_ID="your_client_id" \
 ZOOM_CLIENT_SECRET="your_client_secret" \
-ZOOM_OUT_DIR="./zoom_recordings" \
 ZOOM_USER_ID="user@example.com" \
 python3 zoom_recording_downloader.py
 ```
