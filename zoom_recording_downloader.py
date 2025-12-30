@@ -209,14 +209,40 @@ def list_user_recordings(user_id: str, token_container: dict, from_date: str, to
 
     return meetings
 
+def list_account_users(token_container: dict, refresh_token_callback: Callable[[], str] | None = None) -> list[dict]:
+    """
+    List all users in the Zoom account.
+    GET /users - Returns all users in the account.
+    """
+    users = []
+    next_token = None
+    page_size = 300
+
+    while True:
+        params = {
+            "page_size": page_size,
+            "status": "active",  # Only get active users
+        }
+        if next_token:
+            params["next_page_token"] = next_token
+
+        data = zoom_get("/users", token_container, params=params, refresh_token_callback=refresh_token_callback)
+        users.extend(data.get("users", []))
+        next_token = data.get("next_page_token")
+        if not next_token:
+            break
+
+    return users
+
 def main():
     # === REQUIRED ENV VARS ===
     account_id = env("ZOOM_ACCOUNT_ID")
     client_id = env("ZOOM_CLIENT_ID")
     client_secret = env("ZOOM_CLIENT_SECRET")
 
-    # user_id can be: "me" (common for Server-to-Server OAuth), a Zoom userId, or an email depending on your setup
-    user_id = os.environ.get("ZOOM_USER_ID", "me")
+    # user_id can be: "all" (default - all users), "me" (current user), a Zoom userId, or an email
+    # If not set, defaults to "all" to get all org recordings
+    user_id = os.environ.get("ZOOM_USER_ID", "all")
 
     # Local output folder (optional, defaults to ./zoom_recordings)
     out_dir = pathlib.Path(os.environ.get("ZOOM_OUT_DIR", "./zoom_recordings")).expanduser().resolve()
@@ -243,69 +269,92 @@ def main():
     total_files = 0
     downloaded = 0
 
-    for (from_date, to_date) in windows:
-        print(f"\nListing recordings for {user_id} from {from_date} to {to_date} ...")
-        meetings = list_user_recordings(user_id, token_container, from_date, to_date, refresh_token_callback=refresh_token)
-        print(f"Found {len(meetings)} meetings in this window.")
+    # Determine which users to process
+    if user_id and user_id != "all":
+        # Single user mode (backward compatible)
+        users_to_process = [{"id": user_id, "email": user_id}]
+        print(f"Processing recordings for user: {user_id}")
+    else:
+        # Get all users in the account
+        print("Fetching all users in the account...")
+        all_users = list_account_users(token_container, refresh_token_callback=refresh_token)
+        users_to_process = all_users
+        print(f"Found {len(users_to_process)} users. Processing recordings for all users...")
 
-        for m in meetings:
-            topic = sanitize(m.get("topic", "untitled"))
-            start_time = m.get("start_time") or "unknown_start"
-            start_time_safe = sanitize(start_time.replace(":", "-"))
-            meeting_id = str(m.get("uuid") or m.get("id") or "unknown_meeting")
+    for user in users_to_process:
+        current_user_id = user.get("id") or user.get("email") or "me"
+        user_email = user.get("email", current_user_id)
+        print(f"\n{'='*60}")
+        print(f"Processing user: {user_email} ({current_user_id})")
+        print(f"{'='*60}")
 
-            base = out_dir / f"{start_time_safe} - {topic}" / sanitize(meeting_id, 80)
+        for (from_date, to_date) in windows:
+            print(f"\nListing recordings for {current_user_id} from {from_date} to {to_date} ...")
+            meetings = list_user_recordings(current_user_id, token_container, from_date, to_date, refresh_token_callback=refresh_token)
+            print(f"Found {len(meetings)} meetings in this window.")
 
-            for rf in m.get("recording_files", []) or []:
-                total_files += 1
-                file_id = rf.get("id") or rf.get("recording_end") or rf.get("file_type") or str(total_files)
-                file_type = (rf.get("file_type") or "FILE").upper()
-                ext = (rf.get("file_extension") or "").lower()
+            for m in meetings:
+                topic = sanitize(m.get("topic", "untitled"))
+                start_time = m.get("start_time") or "unknown_start"
+                start_time_safe = sanitize(start_time.replace(":", "-"))
+                meeting_id = str(m.get("uuid") or m.get("id") or "unknown_meeting")
 
-                # Some types come without extension; give helpful defaults
-                if not ext:
-                    ext = {
-                        "MP4": "mp4",
-                        "M4A": "m4a",
-                        "CHAT": "txt",
-                        "VTT": "vtt",
-                        "TRANSCRIPT": "vtt",
-                    }.get(file_type, "bin")
+                # Include user_id in path to avoid conflicts between users
+                base = out_dir / sanitize(user_email, 60) / f"{start_time_safe} - {topic}" / sanitize(meeting_id, 80)
 
-                download_url = rf.get("download_url")
-                if not download_url:
-                    continue
+                for rf in m.get("recording_files", []) or []:
+                    total_files += 1
+                    file_id = rf.get("id") or rf.get("recording_end") or rf.get("file_type") or str(total_files)
+                    file_type = (rf.get("file_type") or "FILE").upper()
+                    ext = (rf.get("file_extension") or "").lower()
 
-                out_name = f"{file_type}.{ext}"
-                out_path = base / out_name
+                    # Some types come without extension; give helpful defaults
+                    if not ext:
+                        ext = {
+                            "MP4": "mp4",
+                            "M4A": "m4a",
+                            "CHAT": "txt",
+                            "VTT": "vtt",
+                            "TRANSCRIPT": "vtt",
+                        }.get(file_type, "bin")
 
-                key = f"{meeting_id}:{file_id}:{out_name}"
-                if manifest["downloaded"].get(key):
-                    continue
+                    download_url = rf.get("download_url")
+                    if not download_url:
+                        continue
 
-                # Add access_token to download_url for protected recordings  [oai_citation:5‡Harvard APIs Portal](https://portal.apis.huit.harvard.edu/docs/ccs-zoom-api/1/routes/users/%7BuserId%7D/recordings/get?utm_source=chatgpt.com)
-                # Use current token from container (may be refreshed during execution)
-                final_url = add_access_token_to_download_url(download_url, token_container["token"])
+                    out_name = f"{file_type}.{ext}"
+                    out_path = base / out_name
 
-                print(f"Downloading {out_name} -> {out_path}")
-                try:
-                    stream_download(final_url, out_path, token_container=token_container, refresh_token_callback=refresh_token)
-                except Exception as e:
-                    print(f"  !! Failed: {e}")
-                    continue
+                    # Include user_id in manifest key to avoid conflicts
+                    key = f"{current_user_id}:{meeting_id}:{file_id}:{out_name}"
+                    if manifest["downloaded"].get(key):
+                        continue
 
-                manifest["downloaded"][key] = {
-                    "saved_to": str(out_path),
-                    "downloaded_at": dt.datetime.utcnow().isoformat() + "Z",
-                    "from": from_date,
-                    "to": to_date,
-                }
-                downloaded += 1
+                    # Add access_token to download_url for protected recordings  [oai_citation:5‡Harvard APIs Portal](https://portal.apis.huit.harvard.edu/docs/ccs-zoom-api/1/routes/users/%7BuserId%7D/recordings/get?utm_source=chatgpt.com)
+                    # Use current token from container (may be refreshed during execution)
+                    final_url = add_access_token_to_download_url(download_url, token_container["token"])
 
-                # polite pacing (avoid tripping rate limits too fast)
-                time.sleep(0.2)
+                    print(f"Downloading {out_name} -> {out_path}")
+                    try:
+                        stream_download(final_url, out_path, token_container=token_container, refresh_token_callback=refresh_token)
+                    except Exception as e:
+                        print(f"  !! Failed: {e}")
+                        continue
 
-        save_manifest(out_dir, manifest)
+                    manifest["downloaded"][key] = {
+                        "saved_to": str(out_path),
+                        "downloaded_at": dt.datetime.utcnow().isoformat() + "Z",
+                        "from": from_date,
+                        "to": to_date,
+                        "user_id": current_user_id,
+                        "user_email": user_email,
+                    }
+                    downloaded += 1
+
+                    # polite pacing (avoid tripping rate limits too fast)
+                    time.sleep(0.2)
+
+            save_manifest(out_dir, manifest)
 
     print(f"\nDone. Files seen: {total_files}, newly downloaded: {downloaded}")
     print(f"Output folder: {out_dir}")

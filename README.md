@@ -52,8 +52,10 @@ The script uses environment variables for configuration. Set the following:
 
 ### Optional Environment Variables
 
-- `ZOOM_USER_ID`: User ID to download recordings for (default: `"me"` - uses account owner)
-  - Can be `"me"`, a Zoom user ID, or an email address
+- `ZOOM_USER_ID`: User ID to download recordings for (default: `"all"` - downloads all users' recordings)
+  - `"all"` - Downloads recordings for all users in the account (requires admin scope)
+  - `"me"` - Downloads only your recordings
+  - A Zoom user ID or email address - Downloads recordings for that specific user
 - `ZOOM_OUT_DIR`: Output directory for downloaded recordings (default: `./zoom_recordings`)
 - `ZOOM_MONTHS_BACK`: Number of months to look back for recordings (default: `4`)
 
@@ -84,6 +86,22 @@ ZOOM_MONTHS_BACK="12" \
 python3 zoom_recording_downloader.py
 ```
 
+### Download All Users' Recordings (Default)
+
+By default, the script downloads recordings for all users in the account:
+
+```bash
+ZOOM_ACCOUNT_ID="your_account_id" \
+ZOOM_CLIENT_ID="your_client_id" \
+ZOOM_CLIENT_SECRET="your_client_secret" \
+python3 zoom_recording_downloader.py
+```
+
+Or explicitly set:
+```bash
+ZOOM_USER_ID="all" python3 zoom_recording_downloader.py
+```
+
 ### Using a Specific User
 
 To download recordings for a specific user:
@@ -96,10 +114,29 @@ ZOOM_USER_ID="user@example.com" \
 python3 zoom_recording_downloader.py
 ```
 
+Or just your own recordings:
+```bash
+ZOOM_USER_ID="me" python3 zoom_recording_downloader.py
+```
+
 ## Output Structure
 
 Recordings are organized in the following structure:
 
+```
+output_directory/
+├── manifest.json
+└── user@example.com/                    (when ZOOM_USER_ID="all")
+    └── YYYY-MM-DDTHH-MM-SS - Meeting Topic/
+        └── meeting_id/
+            ├── MP4.mp4
+            ├── M4A.m4a
+            ├── CHAT.txt
+            ├── VTT.vtt
+            └── TRANSCRIPT.vtt
+```
+
+When downloading for a single user (ZOOM_USER_ID="me" or specific user), the structure is:
 ```
 output_directory/
 ├── manifest.json
@@ -115,20 +152,22 @@ output_directory/
 ### Manifest File
 
 The `manifest.json` file tracks all downloaded files to prevent re-downloading. It contains:
-- File keys (meeting_id:file_id:filename)
+- File keys (user_id:meeting_id:file_id:filename) - includes user_id to avoid conflicts when downloading all users
 - Save location
 - Download timestamp
 - Date range information
+- User ID and email (when downloading all users)
 
 ## How It Works
 
 1. **Authentication**: Gets an access token using Server-to-Server OAuth
-2. **Time Windows**: Breaks the time range into month-sized windows for efficient API calls
-3. **Listing**: Fetches all recordings for each time window
-4. **Manifest Check**: Skips files that are already in the manifest
-5. **Download**: Downloads each new recording file
-6. **Token Refresh**: Automatically refreshes expired tokens during long-running downloads
-7. **Progress Tracking**: Updates the manifest after each successful download
+2. **User Discovery**: If `ZOOM_USER_ID="all"` (default), fetches all active users in the account
+3. **Time Windows**: Breaks the time range into month-sized windows for efficient API calls
+4. **Listing**: For each user, fetches all recordings for each time window
+5. **Manifest Check**: Skips files that are already in the manifest (includes user_id to avoid conflicts)
+6. **Download**: Downloads each new recording file, organized by user
+7. **Token Refresh**: Automatically refreshes expired tokens during long-running downloads
+8. **Progress Tracking**: Updates the manifest after each successful download
 
 ## Token Refresh
 
@@ -154,7 +193,7 @@ The script automatically handles token expiration:
 
 ### "User does not exist"
 
-**Solution**: Check that `ZOOM_USER_ID` is set correctly. Use `"me"` for the account owner, or a valid user ID/email.
+**Solution**: Check that `ZOOM_USER_ID` is set correctly. Use `"all"` for all users (default), `"me"` for the account owner, or a valid user ID/email.
 
 ### "Access token is expired"
 
