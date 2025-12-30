@@ -15,7 +15,7 @@ A Python script to automatically download Zoom cloud recordings using the Zoom A
 
 - Python 3.11 or higher
 - `requests` library
-- Zoom Server-to-Server OAuth app with appropriate scopes
+- Zoom Server-to-Server OAuth app with appropriate scopes (see Zoom API Setup section)
 
 ## Installation
 
@@ -33,8 +33,9 @@ Before using this script, you need to create a Server-to-Server OAuth app in the
 1. Go to [Zoom Marketplace](https://marketplace.zoom.us/)
 2. Create a new Server-to-Server OAuth app
 3. Enable the following scopes in your app settings:
-   - `cloud_recording:read:list_user_recordings`
-   - `cloud_recording:read:list_user_recordings:admin`
+   - `cloud_recording:read:list_user_recordings` (required for downloading recordings)
+   - `cloud_recording:read:list_user_recordings:admin` (required for downloading any user's recordings)
+   - `user:read:admin` (required when using `ZOOM_USER_ID="all"` to list all users in the account)
 4. Note down your:
    - Account ID
    - Client ID
@@ -188,8 +189,9 @@ The script automatically handles token expiration:
 ### "Invalid access token, does not contain scopes"
 
 **Solution**: Ensure your Zoom OAuth app has the required scopes enabled:
-- `cloud_recording:read:list_user_recordings`
-- `cloud_recording:read:list_user_recordings:admin`
+- `cloud_recording:read:list_user_recordings` (required)
+- `cloud_recording:read:list_user_recordings:admin` (required)
+- `user:read:admin` (required when using `ZOOM_USER_ID="all"` to download all users' recordings)
 
 ### "User does not exist"
 
