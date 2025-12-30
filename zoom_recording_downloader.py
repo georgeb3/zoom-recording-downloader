@@ -214,12 +214,10 @@ def main():
     account_id = env("ZOOM_ACCOUNT_ID")
     client_id = env("ZOOM_CLIENT_ID")
     client_secret = env("ZOOM_CLIENT_SECRET")
+    out_dir = pathlib.Path(env("ZOOM_OUT_DIR")).expanduser().resolve()
 
     # user_id can be: "me" (common for Server-to-Server OAuth), a Zoom userId, or an email depending on your setup
     user_id = os.environ.get("ZOOM_USER_ID", "me")
-
-    # Local output folder
-    out_dir = pathlib.Path(os.environ.get("ZOOM_OUT_DIR", "./zoom_recordings")).expanduser().resolve()
 
     # How far back to pull (months)
     months_back = int(os.environ.get("ZOOM_MONTHS_BACK", "24"))
