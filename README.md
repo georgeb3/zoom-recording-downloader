@@ -35,7 +35,7 @@ Before using this script, you need to create a Server-to-Server OAuth app in the
 3. Enable the following scopes in your app settings:
    - `cloud_recording:read:list_user_recordings` (required for downloading recordings)
    - `cloud_recording:read:list_user_recordings:admin` (required for downloading any user's recordings)
-   - `user:read:admin` (required when using `ZOOM_USER_ID="all"` to list all users in the account)
+   - `user:read:list_users:admin` (required when using `ZOOM_USER_ID="all"` to list all users in the account)
 4. Note down your:
    - Account ID
    - Client ID
@@ -191,7 +191,7 @@ The script automatically handles token expiration:
 **Solution**: Ensure your Zoom OAuth app has the required scopes enabled:
 - `cloud_recording:read:list_user_recordings` (required)
 - `cloud_recording:read:list_user_recordings:admin` (required)
-- `user:read:admin` (required when using `ZOOM_USER_ID="all"` to download all users' recordings)
+- `user:read:list_users:admin` (required when using `ZOOM_USER_ID="all"` to download all users' recordings)
 
 ### "User does not exist"
 

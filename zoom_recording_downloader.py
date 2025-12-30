@@ -34,8 +34,8 @@ def get_s2s_access_token(account_id: str, client_id: str, client_secret: str) ->
         "account_id": account_id,
     }
     # Explicitly request the required scopes (must be enabled in Zoom app settings)
-    # user:read:admin is needed when ZOOM_USER_ID="all" to list all users
-    scope = "cloud_recording:read:list_user_recordings cloud_recording:read:list_user_recordings:admin user:read:admin"
+    # user:read:list_users:admin is needed when ZOOM_USER_ID="all" to list all users
+    scope = "cloud_recording:read:list_user_recordings cloud_recording:read:list_user_recordings:admin user:read:list_users:admin"
     params["scope"] = scope
     
     resp = requests.post(
