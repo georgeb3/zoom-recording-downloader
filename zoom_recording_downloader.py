@@ -33,10 +33,10 @@ def get_s2s_access_token(account_id: str, client_id: str, client_secret: str) ->
         "grant_type": "account_credentials",
         "account_id": account_id,
     }
-    # Explicitly request the required scopes (must be enabled in Zoom app settings)
-    # user:read:list_users:admin is needed when ZOOM_USER_ID="all" to list all users
-    scope = "cloud_recording:read:list_user_recordings cloud_recording:read:list_user_recordings:admin user:read:list_users:admin"
-    params["scope"] = scope
+    # Note: For Server-to-Server OAuth, Zoom automatically grants ALL enabled scopes
+    # The scope parameter is optional - if omitted, all enabled scopes are granted
+    # If you need to limit scopes, uncomment and modify the line below:
+    # params["scope"] = "cloud_recording:read:list_user_recordings cloud_recording:read:list_user_recordings:admin user:read:list_users:admin"
     
     resp = requests.post(
         ZOOM_TOKEN_URL,
